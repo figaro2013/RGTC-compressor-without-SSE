@@ -1,4 +1,12 @@
-# RGTC-compressor-SSE
+# RGTC-compressor-without-SSE
+Compress normal map from 8-bit RGBA to RGTC
+
+## differences between this fork and the original one: RGTC-compressor-SSE
+The only c++ file, NormalMap_TGA_RGBA8_to_DDS_RGTC.c++ is transferred to c. SSE is not used and no mipmaps are generated since I do not need them.
+
+Below is the README of the original project: RGTC-compressor-SSE.
+
+## RGTC-compressor-SSE
 Compress normal map quickly from 8-bit RGBA to RGTC using SSE2
 
 ### Introduction
