@@ -283,41 +283,21 @@ void WriteDDS(const char *filename, const struct MipmapLevel levels) {
 //                                 entry point
 //------------------------------------------------------------------------------------
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        fprintf(stderr, "Parameters:  inputfilename.tga outputfilename.dds {--repeat K}\n");
-        fprintf(stderr, "   --repeat K   repeat compression K times and display average time\n");
-        return 123;
-    }
-
-    int repeat = 1;
-    char *positional[2];
-    int cnt_positional = 0;
-
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--repeat") == 0)
-            repeat = atoi(argv[++i]);
-        else {
-            positional[cnt_positional] = argv[i];
-            cnt_positional++;
-        }
-    }
-
+int main() {
     byte *data;
     int width;
     int height;
 
-    data = ReadTGA(positional[0], &width, &height);
+    data = ReadTGA("inputs/container2.tga", &width, &height);
 
     struct MipmapLevel levels;
     int startTime = clock();
-    for (int i = 0; i < repeat; i++)
-        levels = CompressAndNOTGenerateMipmaps(data, width, height);
+    levels = CompressAndNOTGenerateMipmaps(data, width, height);
     int deltaTime = clock() - startTime;
 
-    WriteDDS(positional[1], levels);
+    WriteDDS("outputs/output1019.dds", levels);
 
-    printf("Running code %d times took %0.2lf milliseconds\n", repeat, 1e+3 * deltaTime / CLOCKS_PER_SEC);
+    printf("Running code took %0.2lf milliseconds\n", 1e+3 * deltaTime / CLOCKS_PER_SEC);
 
     return 0;
 }
