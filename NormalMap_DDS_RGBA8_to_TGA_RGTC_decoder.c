@@ -200,6 +200,45 @@ void WriteTGA(const char *filename, byte *texel, int width, int height){
    fclose(fout);
 }
 
+byte* ReadTGA(const char *filename, int *width, int *height) {
+    FILE *fin = fopen(filename, "rb");
+    assert(fin);
+
+    TgaHeader tgaHeader;
+    fread(&tgaHeader, sizeof(TgaHeader), 1, fin);
+
+    //no color map in the file
+    assert(tgaHeader.colorMapType == 0);
+    //true-color RGB without RLE compression
+    assert(tgaHeader.imageTypeCode == 2);
+    //only 32-bit RGBA images and 24-bit RGB images are supported
+    assert(tgaHeader.imageSpecs.bpp == 32 || tgaHeader.imageSpecs.bpp == 24);
+    //only old Truevision images supported, no way to set order of lines
+    assert((tgaHeader.imageSpecs.desc & 0xF0) == 0);
+
+    *width = tgaHeader.imageSpecs.width;
+    *height = tgaHeader.imageSpecs.height;
+    byte *data = (byte*)malloc(*width * *height * 4);
+
+    int bpp = tgaHeader.imageSpecs.bpp / 8;
+    fread(data, *width * *height * bpp, 1, fin);
+
+    byte tmp = 0;
+    for (int i = *width * *height - 1; i >= 0; i--) {
+        data[4*i+0] = data[bpp*i+0];
+        data[4*i+1] = data[bpp*i+1];
+        data[4*i+2] = data[bpp*i+2];
+        if(bpp == 3) data[4*i+3] = 255;
+        else if(bpp == 4) data[4*i+3] = data[bpp*i+3];
+        tmp = data[4*i+0];
+        data[4*i+0] = data[4*i+2];
+        data[4*i+2] = tmp;
+    }
+
+    fclose(fin);
+    return data;
+}
+
 //------------------------------------------------------------------------------------
 //                                 entry point
 //------------------------------------------------------------------------------------
@@ -209,7 +248,17 @@ int main() {
     int height;
     int type;
 
-    byte *data = ReadDDS("test_pics\\container2_RGBA_RGTC_encoded.dds", &width, &height, &type);
+    char *filename = "pinkpurplecircle"; //pinkpurplecircle multicolor1 woodcontainer1 woodfloor1
+    char *path1 = "test_pics\\";
+    char *readpath2 = "_RGTC_encoded.dds";
+    char *readpath2_original = ".tga";
+    char *readfilepath = (char *) malloc(strlen(path1) + strlen(filename) + strlen(readpath2));
+    sprintf(readfilepath, "%s%s%s", path1, filename, readpath2);
+    char *readfilepath_original = (char *) malloc(strlen(path1) + strlen(filename) + strlen(readpath2_original));
+    sprintf(readfilepath_original, "%s%s%s", path1, filename, readpath2_original);
+
+    byte *data = ReadDDS(readfilepath, &width, &height, &type);
+    byte *original_tga = ReadTGA(readfilepath_original, &width, &height);
 
     byte *texel = (byte*)malloc(width * height * 4);
     byte *texel_tmp = texel;
@@ -220,8 +269,8 @@ int main() {
         for(int i=0; i<width; i++){
             fetch_2d_texel_rgba_ati2(data, width, i, j, texel_tmp);
             texel_tmp[2] = texel_tmp[0];
-            texel_tmp[0] = 0;
-            texel_tmp[3] = 0;
+            texel_tmp[0] = original_tga[(j*width+i)*4+2];
+            texel_tmp[3] = original_tga[(j*width+i)*4+3];
             /*tmp = texel_tmp[2];
             texel_tmp[2] = texel_tmp[0];
             texel_tmp[0] = tmp;*/
@@ -229,7 +278,10 @@ int main() {
         }
     int deltaTime = clock() - startTime;
 
-    WriteTGA("test_pics\\container2_RGBA_RGTC_decoded.tga", texel, width, height);
+    char *writepath2 = "_RGTC_decoded_blue_uncompressed.tga";
+    char *writefilepath = (char *) malloc(strlen(path1) + strlen(filename) + strlen(writepath2));
+    sprintf(writefilepath, "%s%s%s", path1, filename, writepath2);
+    WriteTGA(writefilepath, texel, width, height);
 
     printf("Running code took %0.2lf milliseconds\n", 1e+3 * deltaTime / CLOCKS_PER_SEC);
 

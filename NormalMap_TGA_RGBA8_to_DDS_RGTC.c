@@ -288,14 +288,22 @@ int main() {
     int width;
     int height;
 
-    data = ReadTGA("test_pics\\container2.tga", &width, &height);
+    char *filename = "woodfloor1"; //pinkpurplecircle multicolor1 woodcontainer1 woodfloor1
+    char *path1 = "test_pics\\";
+    char *readpath2 = ".tga";
+    char *writepath2 = "_RGTC_encoded.dds";
+    char *readfilepath = (char *) malloc(strlen(path1) + strlen(filename) + strlen(readpath2));
+    sprintf(readfilepath, "%s%s%s", path1, filename, readpath2);
+    data = ReadTGA(readfilepath, &width, &height);
 
     struct MipmapLevel levels;
     int startTime = clock();
     levels = CompressAndNOTGenerateMipmaps(data, width, height);
     int deltaTime = clock() - startTime;
 
-    WriteDDS("test_pics\\container2_RGTC_encoded.dds", levels);
+    char *writefilepath = (char *) malloc(strlen(path1) + strlen(filename) + strlen(writepath2));
+    sprintf(writefilepath, "%s%s%s", path1, filename, writepath2);
+    WriteDDS(writefilepath, levels);
 
     printf("Running code took %0.2lf milliseconds\n", 1e+3 * deltaTime / CLOCKS_PER_SEC);
 
