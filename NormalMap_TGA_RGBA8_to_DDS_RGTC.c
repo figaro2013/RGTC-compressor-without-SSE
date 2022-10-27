@@ -288,14 +288,14 @@ int main() {
     int width;
     int height;
 
-    data = ReadTGA("inputs/container2.tga", &width, &height);
+    data = ReadTGA("test_pics\\container2.tga", &width, &height);
 
     struct MipmapLevel levels;
     int startTime = clock();
     levels = CompressAndNOTGenerateMipmaps(data, width, height);
     int deltaTime = clock() - startTime;
 
-    WriteDDS("outputs/output1019.dds", levels);
+    WriteDDS("test_pics\\container2_RGTC_encoded.dds", levels);
 
     printf("Running code took %0.2lf milliseconds\n", 1e+3 * deltaTime / CLOCKS_PER_SEC);
 
